@@ -1,9 +1,4 @@
-.venv/
-.api_key
-
 __pycache__/
-old.getimg_ai/
 
-generate.py
-tmp.py
-create_api_key.py
+.api_key
+test.py
