@@ -11,53 +11,40 @@ HttpxClientT = TypeVar("HttpxClientT", bound=[httpx.Client, httpx.AsyncClient])
 
 class BaseClient(Generic[HttpxClientT]):
     _client: HttpxClientT
-    _base_url: URL
-    _timeout: Optional[Union[float, Timeout]]
-    _custom_headers: Dict[str, str]
+    timeout: Timeout
 
-    def __init__(
-        self, 
+    def __init__(self, *, timeout: Union[float, None] = None) -> None:
+        self.base_url = URL("https://api.getimg.ai")
+        self.timeout = Timeout(timeout) or DEFAULT_TIMEOUT
+
+    def _prepare_options(
+        self,
+        options: Union[Dict[str, Any], None] = None
+    ) -> Union[Dict[str, Any], None]:
+        if options:
+            post_params = {}
+            for key, value in options.items():
+                if key != "self" and value is not None:
+                    post_params[key] = value
+            return post_params
+        return None
+
+    def _build_request(
+        self,
+        method: str,
+        url: str,
         *,
-        base_url: Union[str, URL],
-        timeout: Optional[Union[float, Timeout]] = None,
-        custom_headers: Optional[Dict[str, Any]] = None,
-    ) -> None:
-        self._base_url = URL(base_url) if isinstance(base_url, str) else base_url
-        self._timeout = timeout or DEFAULT_TIMEOUT
-        self._custom_headers = custom_headers or {}
-
-    def _build_request(self, method: str, url: str, **kwargs) -> Request:
+        params: Union[Dict[str, Any], None] = None,
+        payload: Union[Dict[str, Any], None] = None,
+    ) -> Request:
         return self._client.build_request(
             method=method,
             url=url,
             headers=self.default_headers,
-            **kwargs,
+            params=self._prepare_options(params),
+            json=self._prepare_options(payload),
+            timeout=self.timeout,
         )
-
-    def _build_payload(
-        self,
-        options: Dict[str, Any],
-        *,
-        custom_options: Optional[Dict[str, Any]] = None
-    ) -> Dict[str, Any]:
-        payload = {}
-
-        if custom_options:
-            payload.update(custom_options)
-
-        for key, value in options.items():
-            if key != "self" and value is not None:
-                payload[key] = value
-
-        return payload
-
-    @property
-    def base_url(self) -> str:
-        return self._base_url
-
-    @base_url.setter
-    def base_url(self, url: Union[str, URL]) -> None:
-        self._base_url = URL(url) if isinstance(url ,str) else url
 
     @property
     def auth_headers(self) -> Dict[str, str]:
@@ -69,31 +56,15 @@ class BaseClient(Generic[HttpxClientT]):
             "Accept": "application/json",
             "Content-Type": "application/json",
             **self.auth_headers,
-            **self._custom_headers
         }
 
 
 class SyncAPIClient(BaseClient[httpx.Client]):
     _client: httpx.Client
 
-    def __init__(
-        self, 
-        *,
-        base_url: Union[str, URL],
-        timeout: Optional[Union[float, Timeout]] = None,
-        custom_headers: Optional[Dict[str, str]] = None,
-        http_client: Optional[httpx.Client] = None,
-    ) -> None:
-        super().__init__(
-            base_url=base_url,
-            timeout=timeout,
-            custom_headers=custom_headers
-        )
-        self._client = http_client or httpx.Client(
-            base_url=base_url,
-            timeout=timeout,
-            headers=custom_headers
-        )
+    def __init__(self, *, timeout: Union[float, Timeout, None] = None) -> None:
+        super().__init__(timeout=timeout)
+        self._client = httpx.Client(base_url=self.base_url)
 
     def __enter__(self) -> "SyncAPIClient":
         return self
@@ -105,11 +76,31 @@ class SyncAPIClient(BaseClient[httpx.Client]):
         if hasattr(self, "_client"):
             self._client.close()
 
-    def get(self, path: Union[str, URL], **kwargs) -> Response:
-        request = self._build_request("GET", path, **kwargs)
-        return self._client.send(request)
+    def get(
+        self,
+        url: str,
+        *,
+        params: Union[Dict[str, Any], None] = None,
+        payload: Union[Dict[str, Any], None] = None,
+    ) -> Response:
+        return self._request("GET", url, params=params, payload=payload)
 
-    def post(self, path: Union[str, URL], **kwargs) -> Response:
-        request = self._build_request("POST", path, **kwargs)
-        return self._client.send(request)
+    def post(
+        self,
+        url: str,
+        *,
+        params: Union[Dict[str, Any], None] = None,
+        payload: Union[Dict[str, Any], None] = None,
+    ) -> Response:
+        return self._request("POST", url, params=params, payload=payload)
 
+    def _request(
+        self,
+        method: str,
+        url: str,
+        *,
+        params: Union[Dict[str, Any], None] = None,
+        payload: Union[Dict[str, Any], None] = None,
+    ) -> Response:
+        request = self._build_request(method, url, params=params, payload=payload)
+        return self._client.send(request)
