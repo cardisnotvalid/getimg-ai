@@ -1,7 +1,6 @@
 from typing import Optional, Union, Dict
 
 import httpx
-from httpx import Timeout, URL
 from getimg_api_autoreg import autoreg_api_key
 
 from . import resources
@@ -21,22 +20,14 @@ class GetimgAI(SyncAPIClient):
     text_to_image: resources.TextToImage
     image_to_image: resources.ImageToImage
 
-    base_url = "https://api.getimg.ai"
-
     def __init__(
         self,
         *,
-        api_key: Optional[str] = None,
-        timeout: Optional[Union[float, Timeout]] = None,
-        custom_headers: Optional[Dict[str, str]] = None,
-        http_client: Optional[httpx.Client] = None,
+        api_key: Union[str, None] = None,
+        timeout: Union[float, httpx.Timeout, None] = None,
     ) -> None:
-        super().__init__(
-            base_url=self.base_url,
-            timeout=timeout,
-            custom_headers=custom_headers,
-            http_client=http_client,
-        )
+        super().__init__(timeout=timeout)
+
         if not api_key:
             api_key = _load_api_key()
         if not api_key:
@@ -57,8 +48,3 @@ class GetimgAI(SyncAPIClient):
     @property
     def auth_headers(self) -> Dict[str, str]:
         return {"Authorization": f"Bearer {self.api_key}"}
-
-    @property
-    def default_headers(self) -> Dict[str, str]:
-        return {**super().default_headers, **self._custom_headers}
-
