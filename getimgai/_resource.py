@@ -14,5 +14,3 @@ class SyncAPIResource:
         self._get = client.get
         self._post = client.post
 
-    def build_payload(self, options: Dict[str, Any]) -> Dict[str, Any]:
-        return self._client._build_payload(options)
