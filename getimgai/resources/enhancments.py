@@ -13,8 +13,7 @@ class Enhancement(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/enhancements/upscale", json=payload)
+        return self._post("/v1/enhancements/upscale", json=locals())
 
     def fix_faces(
         self,
@@ -24,5 +23,4 @@ class Enhancement(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/enhancements/face-fix", json=payload)
+        return self._post("/v1/enhancements/face-fix", json=locals())

@@ -13,8 +13,7 @@ class TextToImage(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/essential-v2/text-to-image", json=payload)
+        return self._post("/v1/essential-v2/text-to-image", payload=locals())
 
     def stable_diffusion_xl(
         self,
@@ -33,8 +32,7 @@ class TextToImage(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/stable-diffusion-xl/text-to-image", json=payload)
+        return self._post("/v1/stable-diffusion-xl/text-to-image", payload=locals())
 
     def stable_diffusion(
         self,
@@ -51,8 +49,7 @@ class TextToImage(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/stable-diffusion/text-to-image", json=payload)
+        return self._post("/v1/stable-diffusion/text-to-image", payload=locals())
 
     def latent_consistency(
         self,
@@ -67,6 +64,5 @@ class TextToImage(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/latent-consistency/text-to-image", json=payload)
+        return self._post("/v1/latent-consistency/text-to-image", payload=locals())
 

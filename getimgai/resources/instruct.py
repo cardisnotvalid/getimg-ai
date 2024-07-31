@@ -19,5 +19,4 @@ class Instruct(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/stable-diffusion/instruct", json=payload)
+        return self._post("/v1/stable-diffusion/instruct", json=locals())

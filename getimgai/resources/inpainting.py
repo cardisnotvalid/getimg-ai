@@ -24,8 +24,7 @@ class Inpainting(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/stable-diffusion-xl/inpaint", json=payload)
+        return self._post("/v1/stable-diffusion-xl/inpaint", json=locals())
 
     def stable_diffusion(
         self,
@@ -45,5 +44,4 @@ class Inpainting(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/stable-diffusion/inpaint", json=payload)
+        return self._post("/v1/stable-diffusion/inpaint", json=locals())

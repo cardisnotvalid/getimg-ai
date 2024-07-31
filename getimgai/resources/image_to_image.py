@@ -21,8 +21,7 @@ class ImageToImage(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/stable-diffusion-xl/image-to-image", json=payload)
+        return self._post("/v1/stable-diffusion-xl/image-to-image", json=locals())
 
     def stable_diffusion(
         self,
@@ -39,8 +38,7 @@ class ImageToImage(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/stable-diffusion/image-to-image", json=payload)
+        return self._post("/v1/stable-diffusion/image-to-image", json=locals())
 
     def latent_consistency(
         self,
@@ -55,5 +53,4 @@ class ImageToImage(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        payload = self.build_payload(locals())
-        return self._post("/v1/latent-consistency/image-to-image", json=payload)
+        return self._post("/v1/latent-consistency/image-to-image", json=locals())
