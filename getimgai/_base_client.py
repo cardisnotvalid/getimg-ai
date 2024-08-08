@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Optional, Union, Dict, Any
+from typing import TypeVar, Generic, Optional, Dict, Any
 
 import httpx
 from httpx import URL, Timeout, Response, Request
@@ -13,14 +13,14 @@ class BaseClient(Generic[HttpxClientT]):
     _client: HttpxClientT
     timeout: Timeout
 
-    def __init__(self, *, timeout: Union[float, None] = None) -> None:
+    def __init__(self, *, timeout: Optional[float] = None) -> None:
         self.base_url = URL("https://api.getimg.ai")
         self.timeout = Timeout(timeout) or DEFAULT_TIMEOUT
 
     def _prepare_options(
         self,
-        options: Union[Dict[str, Any], None] = None
-    ) -> Union[Dict[str, Any], None]:
+        options: Optional[Dict[str, Any]] = None,
+    ) -> Optional[Dict[str, Any]]:
         if options:
             post_params = {}
             for key, value in options.items():
@@ -34,8 +34,8 @@ class BaseClient(Generic[HttpxClientT]):
         method: str,
         url: str,
         *,
-        params: Union[Dict[str, Any], None] = None,
-        payload: Union[Dict[str, Any], None] = None,
+        params: Optional[Dict[str, Any]] = None,
+        payload: Optional[Dict[str, Any]] = None,
     ) -> Request:
         return self._client.build_request(
             method=method,
@@ -62,8 +62,9 @@ class BaseClient(Generic[HttpxClientT]):
 class SyncAPIClient(BaseClient[httpx.Client]):
     _client: httpx.Client
 
-    def __init__(self, *, timeout: Union[float, Timeout, None] = None) -> None:
+    def __init__(self, *, timeout: Optional[float] = None) -> None:
         super().__init__(timeout=timeout)
+
         self._client = httpx.Client(base_url=self.base_url)
 
     def __enter__(self) -> "SyncAPIClient":
@@ -80,8 +81,8 @@ class SyncAPIClient(BaseClient[httpx.Client]):
         self,
         url: str,
         *,
-        params: Union[Dict[str, Any], None] = None,
-        payload: Union[Dict[str, Any], None] = None,
+        params: Optional[Dict[str, Any]] = None,
+        payload: Optional[Dict[str, Any]] = None,
     ) -> Response:
         return self._request("GET", url, params=params, payload=payload)
 
@@ -89,8 +90,8 @@ class SyncAPIClient(BaseClient[httpx.Client]):
         self,
         url: str,
         *,
-        params: Union[Dict[str, Any], None] = None,
-        payload: Union[Dict[str, Any], None] = None,
+        params: Optional[Dict[str, Any]] = None,
+        payload: Optional[Dict[str, Any]] = None,
     ) -> Response:
         return self._request("POST", url, params=params, payload=payload)
 
@@ -99,8 +100,8 @@ class SyncAPIClient(BaseClient[httpx.Client]):
         method: str,
         url: str,
         *,
-        params: Union[Dict[str, Any], None] = None,
-        payload: Union[Dict[str, Any], None] = None,
+        params: Optional[Dict[str, Any]] = None,
+        payload: Optional[Dict[str, Any]] = None,
     ) -> Response:
         request = self._build_request(method, url, params=params, payload=payload)
         return self._client.send(request)

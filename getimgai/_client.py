@@ -1,6 +1,5 @@
-from typing import Optional, Union, Dict
+from typing import Optional, Dict
 
-import httpx
 from getimg_api_autoreg import autoreg_api_key
 
 from . import resources
@@ -23,11 +22,9 @@ class GetimgAI(SyncAPIClient):
     def __init__(
         self,
         *,
-        api_key: Union[str, None] = None,
-        timeout: Union[float, httpx.Timeout, None] = None,
+        api_key: Optional[str] = None,
+        timeout: Optional[float] = None,
     ) -> None:
-        super().__init__(timeout=timeout)
-
         if not api_key:
             api_key = _load_api_key()
         if not api_key:
@@ -35,6 +32,8 @@ class GetimgAI(SyncAPIClient):
             _save_api_key(api_key)
 
         self.api_key = api_key
+
+        super().__init__(timeout=timeout)
 
         self.models = resources.Models(self)
         self.instruct = resources.Instruct(self)
