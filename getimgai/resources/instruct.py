@@ -19,4 +19,4 @@ class Instruct(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        return self._post("/v1/stable-diffusion/instruct", json=locals())
+        return self._post("stable-diffusion/instruct", json_data=locals())

@@ -1,10 +1,5 @@
-from typing import Optional, Dict
-
-from getimg_api_autoreg import autoreg_api_key
-
 from . import resources
 from ._base_client import SyncAPIClient
-from .utils import _save_api_key, _load_api_key
 
 
 class GetimgAI(SyncAPIClient):
@@ -19,22 +14,12 @@ class GetimgAI(SyncAPIClient):
     text_to_image: resources.TextToImage
     image_to_image: resources.ImageToImage
 
-    def __init__(
-        self,
-        *,
-        api_key: Optional[str] = None,
-        timeout: Optional[float] = None,
-    ) -> None:
+    def __init__(self, api_key, *, timeout=None):
         if not api_key:
-            api_key = _load_api_key()
-        if not api_key:
-            api_key = autoreg_api_key()
-            _save_api_key(api_key)
-
+            raise ValueError("api key was not passed")
         self.api_key = api_key
 
         super().__init__(timeout=timeout)
-
         self.models = resources.Models(self)
         self.instruct = resources.Instruct(self)
         self.idadapter = resources.IDAdapter(self)
@@ -45,5 +30,8 @@ class GetimgAI(SyncAPIClient):
         self.image_to_image = resources.ImageToImage(self)
 
     @property
-    def auth_headers(self) -> Dict[str, str]:
+    def auth_headers(self):
         return {"Authorization": f"Bearer {self.api_key}"}
+
+    def get_account_balance(self):
+        return self.get("account/balance")

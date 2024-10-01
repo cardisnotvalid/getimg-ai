@@ -13,7 +13,7 @@ class Enhancement(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        return self._post("/v1/enhancements/upscale", json=locals())
+        return self._post("enhancements/upscale", json_data=locals())
 
     def fix_faces(
         self,
@@ -23,4 +23,4 @@ class Enhancement(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        return self._post("/v1/enhancements/face-fix", json=locals())
+        return self._post("enhancements/face-fix", json_data=locals())

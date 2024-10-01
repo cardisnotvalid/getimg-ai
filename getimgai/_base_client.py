@@ -1,107 +1,105 @@
-from typing import TypeVar, Generic, Optional, Dict, Any
+from typing import TypeVar, Generic
 
 import httpx
-from httpx import URL, Timeout, Response, Request
-
-from ._constants import DEFAULT_TIMEOUT
 
 
 HttpxClientT = TypeVar("HttpxClientT", bound=[httpx.Client, httpx.AsyncClient])
 
 
 class BaseClient(Generic[HttpxClientT]):
-    _client: HttpxClientT
-    timeout: Timeout
+    def __init__(self, *, timeout=None):
+        self._api_version = 1
+        self._base_url = "https://api.getimg.ai/"
+        self._timeout = httpx.Timeout(timeout if timeout is not None else 60)
 
-    def __init__(self, *, timeout: Optional[float] = None) -> None:
-        self.base_url = URL("https://api.getimg.ai")
-        self.timeout = Timeout(timeout) or DEFAULT_TIMEOUT
+    def _prepare_url(self, url):
+        merge_url = httpx.URL(url)
+        if merge_url.is_relative_url:
+            merge_path = self.base_url.raw_path + merge_url.raw_path.lstrip(b"/")
+            return self.base_url.copy_with(raw_path=merge_path)
 
-    def _prepare_options(
-        self,
-        options: Optional[Dict[str, Any]] = None,
-    ) -> Optional[Dict[str, Any]]:
-        if options:
-            post_params = {}
-            for key, value in options.items():
-                if key != "self" and value is not None:
-                    post_params[key] = value
-            return post_params
-        return None
+        return merge_url
 
-    def _build_request(
-        self,
-        method: str,
-        url: str,
-        *,
-        params: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
-    ) -> Request:
-        return self._client.build_request(
+    def _prepare_options(self, options):
+        pre_options = {}
+
+        for key, value in options.items():
+            if key != "self" and value is not None:
+                pre_options[key] = value
+
+        return pre_options
+
+    def _build_request(self, method, path, *, params=None, json_data=None):
+        url = self._prepare_url(path)
+
+        if params is not None:
+            params = self._prepare_options(params)
+        if json_data is not None:
+            json_data = self._prepare_options(json_data)
+
+        prepped = self._client.build_request(
             method=method,
             url=url,
             headers=self.default_headers,
-            params=self._prepare_options(params),
-            json=self._prepare_options(payload),
-            timeout=self.timeout,
+            params=params,
+            json=json_data,
+            timeout=self._timeout
         )
+        return prepped
 
     @property
-    def auth_headers(self) -> Dict[str, str]:
+    def api_version(self):
+        return f"v{self._api_version}/"
+
+    @property
+    def base_url(self):
+        return httpx.URL(self._base_url + self.api_version)
+
+    @property
+    def auth_headers(self):
         return {}
 
     @property
-    def default_headers(self) -> Dict[str, str]:
+    def default_headers(self):
         return {
             "Accept": "application/json",
             "Content-Type": "application/json",
-            **self.auth_headers,
+            **self.auth_headers
         }
 
 
 class SyncAPIClient(BaseClient[httpx.Client]):
-    _client: httpx.Client
-
-    def __init__(self, *, timeout: Optional[float] = None) -> None:
+    def __init__(self, *, timeout=None):
         super().__init__(timeout=timeout)
-
         self._client = httpx.Client(base_url=self.base_url)
 
-    def __enter__(self) -> "SyncAPIClient":
+    def __enter__(self):
         return self
 
-    def __exit__(self, *args) -> None:
+    def __exit__(self, *args):
         self.close()
 
-    def close(self) -> None:
+    def close(self):
         if hasattr(self, "_client"):
             self._client.close()
 
-    def get(
-        self,
-        url: str,
-        *,
-        params: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
-    ) -> Response:
-        return self._request("GET", url, params=params, payload=payload)
+    def request(self, method, path, *, params=None, json_data=None):
+        prepped = self._build_request(
+            method,
+            path,
+            params=params,
+            json_data=json_data
+        )
+        response_data = self._client.send(prepped).json()
+        if error := response_data.get("error"):
+            err_type = error["type"]
+            err_code = error["code"]
+            err_msg = error["message"]
+            raise NotImplementedError(f"{err_type} ({err_code}): {err_msg}")
+        return response_data
 
-    def post(
-        self,
-        url: str,
-        *,
-        params: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
-    ) -> Response:
-        return self._request("POST", url, params=params, payload=payload)
+    def get(self, path, *, params=None):
+        return self.request("GET", path, params=params)
 
-    def _request(
-        self,
-        method: str,
-        url: str,
-        *,
-        params: Optional[Dict[str, Any]] = None,
-        payload: Optional[Dict[str, Any]] = None,
-    ) -> Response:
-        request = self._build_request(method, url, params=params, payload=payload)
-        return self._client.send(request)
+    def post(self, path, *, params=None, json_data=None):
+        return self.request("POST", path, params=params, json_data=json_data)

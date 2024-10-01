@@ -22,4 +22,4 @@ class ControlNet(SyncAPIResource):
         output_format: Optional[str] = None,
         response_format: Optional[str] = None,
     ):
-        return self._post("/v1/stable-diffusion/controlnet", json=locals())
+        return self._post("stable-diffusion/controlnet", json_data=locals())
